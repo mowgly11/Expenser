@@ -12,6 +12,8 @@ import config from './config.json';
 import initialisePassport from "./passport.ts";
 import MongooseInit from './Database/connection.ts';
 import database from './Database/methods.ts';
+import fs from 'fs';
+import path from 'path';
 
 new MongooseInit(config.MONGODB_URL).connect();
 
@@ -22,6 +24,7 @@ initialisePassport(passport,
 const app: Express = express();
 
 app.set("x-powered-by", false);
+app.set("view-engine", "ejs");
 
 app.use(express.json());
 app.use(express.static(__dirname + `/views`));
@@ -40,22 +43,36 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(methodOverride("_method"));
 
-app.get('/', async(req: Request, res: Response) => {
-    //await database.makeUser({ id: "321", username: "alex" });
+const methodMap = new Map([
+    ["get", { method: "get", callback: "Get" }],
+    ["post", { method: "post", callback: "Post" }],
+    ["delete", { method: "delete", callback: "Delete" }],
+]);
 
-    //await database.delete("321");
-    
-    //await database.updateUsername("321", "brahim");
+const endpointsPath = path.join(__dirname, "routes");
 
-    //await database.addExpense("321", { item: "eyoo", price: 2, date: "12/13/2024", category: "Food", picture: null });
+const readEndpointsDirectory = (directoryPath: string, app: any, methodMap: any) => {
+    const files = fs.readdirSync(directoryPath);
 
-    //await database.removeItemByIndex("321", 0, 'expense');
+    files.forEach(async (file) => {
+        const filePath = path.join(directoryPath, file);
+        const stat = fs.statSync(filePath);
 
-    //await database.flushData("321", 'expense');
+        if (stat.isDirectory()) readEndpointsDirectory(filePath, app, methodMap);
 
-    //await database.addMonthlyReport("321", { date: "12/13/2024", total_spent: 200, imp_percentage: 10 });
+        else if (stat.isFile() && file.endsWith(".ts")) {
+            const module = await import(`file://${filePath}`);
+            const { endpoint, methods, middleware } = module.default;
 
-    res.send("success");
-});
+            methods.forEach((method: string) => {
+                const { callback, method: httpMethod } = methodMap.get(method);
+                if(typeof middleware === 'function') app[httpMethod](endpoint, middleware, module.default[callback]);
+                else app[httpMethod](endpoint, module.default[callback]);
+            });
+        }
+    });
+};
+
+readEndpointsDirectory(endpointsPath, app, methodMap);
 
 app.listen(config.port, () => console.log("listening on port " + config.port));
