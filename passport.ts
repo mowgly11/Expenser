@@ -10,7 +10,7 @@ function initialisePassport(passport: PassportStatic, getUserById: (id: string) 
     passport.use(new GoogleStrategy.Strategy({
         clientID: config.client_id,
         clientSecret: config.client_secret,
-        callbackURL: 'https://localhost:/auth/google/callback',
+        callbackURL: 'http://localhost:3000/auth/google/callback',
         scope: ['profile', 'email'],
     }, async (_accessToken, _refreshToken, profile: Profile, done) => {
         let user = await getUserById(profile.id);
@@ -18,13 +18,12 @@ function initialisePassport(passport: PassportStatic, getUserById: (id: string) 
         if (user) return done(null, profile);
 
         else {
-            console.log(profile)
-            /*let make_user = await database.makeUser({
+            let make_user = await database.makeUser({
                 id: profile.id,
-                username: profile.givenName
+                username: profile.name == null ? `john_${Date.now()}`: profile.name.givenName.trim().split(" ").join("_").toLowerCase()
             });
 
-            if(!make_user) return done(null, false, { message: "An Error Just Occured, Try Again Later" });*/
+            if(!make_user) return done(null, false, { message: "An Error Just Occured, Try Again Later" });
 
             return done(null, profile);
         }
