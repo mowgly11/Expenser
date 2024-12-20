@@ -5,7 +5,8 @@ export default {
   methods: ["get"],
   endpoint: "/dashboard",
   middleware: middleware.checkAuthenticated,
-  Get: async function(req: Request, res: Response, next: NextFunction) {
-    res.send("you are authenticated, id: " + req.session.passport?.user);
+  Get: async function (req: Request, res: Response, next: NextFunction) {
+    let user: any = req.user;
+    res.render("dashboard.ejs");
   }
 };

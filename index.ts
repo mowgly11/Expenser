@@ -4,9 +4,7 @@ import express from 'express';
 import type { Express, Request, Response } from 'express';
 import passport from 'passport';
 import compression from 'compression';
-import flash from 'express-flash';
 import bodyParser from 'body-parser';
-import session from 'express-session';
 import methodOverride from 'method-override';
 import config from './config.json';
 import initialisePassport from "./passport.ts";
@@ -14,12 +12,9 @@ import MongooseInit from './Database/connection.ts';
 import database from './Database/methods.ts';
 import fs from 'fs';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 
 new MongooseInit(config.MONGODB_URL).connect();
-
-initialisePassport(passport,
-    async (id: string) => await database.getUser(id)
-);
 
 const app: Express = express();
 
@@ -28,20 +23,17 @@ app.set("view-engine", "ejs");
 
 app.use(express.json());
 app.use(express.static(__dirname + `/views`));
-app.use(flash());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(session({
-    secret: config.session_secret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 730 }
-}));
+app.use(cookieParser())
 app.use(compression({
     etag: false
 }));
 app.use(passport.initialize());
-app.use(passport.session());
 app.use(methodOverride("_method"));
+
+initialisePassport(passport,
+    async (id: string) => await database.getUser(id)
+);
 
 const methodMap = new Map([
     ["get", { method: "get", callback: "Get" }],
@@ -66,7 +58,7 @@ const readEndpointsDirectory = (directoryPath: string, app: any, methodMap: any)
 
             methods.forEach((method: string) => {
                 const { callback, method: httpMethod } = methodMap.get(method);
-                if(typeof middleware === 'function') app[httpMethod](endpoint, middleware, module.default[callback]);
+                if (typeof middleware === 'function') app[httpMethod](endpoint, middleware, module.default[callback]);
                 else app[httpMethod](endpoint, module.default[callback]);
             });
         }
