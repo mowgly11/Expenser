@@ -6,6 +6,6 @@ export default {
   endpoint: "/add_expense",
   middleware: middleware.checkAuthenticated,
   Get: async function(req: Request, res: Response, next: NextFunction) {
-    res.send("you are authenticated, id: " + req.session.passport?.user);
+    
   }
 };
