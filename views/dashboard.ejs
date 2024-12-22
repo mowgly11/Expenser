@@ -13,5 +13,74 @@
     <form action="/logout" method="post">
         <button class="btn btn-danger">Logout</button>
     </form>
+    <section class="container">
+        <form action="/add_expense" class="w-50" id="expenseForm">
+            <div class="form-group mb-3">
+                <label for="item" class="form-label">Item</label>
+                <input type="text" required class="form-control" placeholder="type the item that you spent money on.." name="item" id="item">
+            </div>
+            <div class="form-group mb-3">
+                <label for="price" class="form-label">Price</label>
+                <input type="number" required class="form-control" name="price" id="price">
+            </div>
+            <div class="form-group mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="text" class="form-control" placeholder="type the date that you purchased this item dd/mm/yyyy" name="date" id="date">
+            </div>
+            <div class="form-group mb-3">
+                <label for="item" class="form-label">Item</label>
+                <select required class="form-control" name="category" id="category">
+                    <option value="" disabled>Select an item from the list below</option>
+                    <option value="food">Food</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="drinks">Drinks</option>
+                    <option value="bills">Bills</option>
+                    <option value="transport">Transportation</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="item" class="form-label">Item</label>
+                <input type="file" class="form-control" placeholder="type the item that you spent money on.." name="pic" id="pic">
+            </div>
+
+            <button class="btn btn-success form-submit">Add</button>
+        </form>
+    </section>
+
+    <script>
+        let expenseForm = document.getElementById("expenseForm");
+
+        expenseForm.addEventListener("submit", async(ev) => {
+            ev.preventDefault();
+
+            let item = document.getElementById("item").value;
+            let price = parseInt(document.getElementById("price").value);
+            let date = document.getElementById("date").value == '' ? null:document.getElementById("date").value;
+            let category = document.getElementById("category").value;
+            let pic = document.getElementById("pic").value == '' ? null:document.getElementById("pic").value;
+
+            console.log({item, price, date, category, pic})
+
+            let domain = new URL(window.location.href).origin;
+            const addExpense = await fetch(`${domain}/add_expense`, {
+                method: "post", 
+                headers: {
+                    'Content-Type': "application/json",
+                },
+                body: JSON.stringify({
+                    item,
+                    price,
+                    date,
+                    category,
+                    pic
+                }) 
+            });
+
+            let response = await addExpense.json();
+
+            console.log(response)
+        });
+    </script>
 </body>
 </html>
