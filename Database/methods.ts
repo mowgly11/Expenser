@@ -2,6 +2,7 @@
 
 import schema from './schema.ts';
 import type { DataBaseOutput, UserDescription, Report, Expense } from '../types/databaseTypes.ts';
+import type { Document } from 'mongoose';
 
 class DatabaseMethods {
     async getUser(id: any): Promise<DataBaseOutput | null> {
@@ -10,9 +11,10 @@ class DatabaseMethods {
         else return null;
     }
 
-    async makeUser(userProps: UserDescription): Promise<boolean> {
+    async makeUser(userProps: UserDescription): Promise<Document | boolean> {
+        let user: Document;
         try {
-            let user = await schema.create({
+            user = await schema.create({
                 id: userProps.id,
                 username: userProps.username,
                 expenses: [],
@@ -21,11 +23,11 @@ class DatabaseMethods {
 
             await user.save();
         } catch (e) {
-            console.log(e);
+            //console.log(e);
             return false;
         }
 
-        return true;
+        return user;
     }
 
     async delete(id: string, existingUser: DataBaseOutput | null = null): Promise<boolean> {
