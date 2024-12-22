@@ -10,12 +10,12 @@ export default {
     let user: Express.User | undefined = req.user;
     let token;
     if(user) {
-       token = jwt.sign({...user}, "super-secret-key", { expiresIn: 1000 * 60 * 5 });
+       token = jwt.sign({...user}, "super-secret-key", { expiresIn: '2 days' });
 
        res.cookie('auth_token', token, {
         httpOnly: true,
         secure: false, // must change on production
-        maxAge: 1000 * 60 * 10
+        maxAge: 1000 * 60 * 60 * 24 * 2
        });
     }
 
