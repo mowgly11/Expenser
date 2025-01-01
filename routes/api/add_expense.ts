@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import middleware from '../../middleware/auth_middleware.ts';
 import database from "../../Database/methods.ts";
+import type { Expense } from '../../types/databaseTypes.ts';
 
 export default {
   methods: ["post"],
@@ -8,7 +9,10 @@ export default {
   middleware: middleware.checkAuthenticated,
   Post: async function (req: Request, res: Response, next: NextFunction) {
     let user: any = req.user;
-    const expenseDescription = req.body;
+    const expenseDescription: Expense = req.body;
+
+    if(expenseDescription.item.length > 50) return res.json({ status: 'failed', message: "item is too bigger than 50 chars." })
+    if(isNaN(expenseDescription.price)) return res.json({ status: 'failed', message: "item is too bigger than 50 chars." })
 
     let added = await database.addExpense(
       user._doc.id,
