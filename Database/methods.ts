@@ -11,6 +11,16 @@ class DatabaseMethods {
         else return null;
     }
 
+    async isValid(id: string): Promise<boolean> {
+        try {
+            const user = await this.getUser(id);
+            if(user) return true;
+        } catch(err) {
+            return false;
+        }
+        return false;
+    }
+
     async makeUser(userProps: UserDescription): Promise<Document | boolean> {
         let user: Document;
         try {
@@ -22,12 +32,13 @@ class DatabaseMethods {
             });
 
             await user.save();
+
+            return user;
         } catch (e) {
             //console.log(e);
             return false;
         }
 
-        return user;
     }
 
     async delete(id: string, existingUser: DataBaseOutput | null = null): Promise<boolean> {
