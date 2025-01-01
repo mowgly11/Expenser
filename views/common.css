@@ -1,0 +1,44 @@
+.alert-popup {
+    position: absolute;
+    right: 10px;
+    top: -20%;
+    border-radius: 8px;
+    text-align: left;
+    transition: .6s ease-in-out;
+}
+
+.alert-popup-m {
+    font-size: 14px;
+}
+
+.visible-alert {
+    top: 1%;
+}
+
+.blur-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.loader {
+    display: none;
+    width: 60px;
+    height: 60px;
+    border: 8px solid rgba(0, 0, 0, 0.2);
+    border-left-color: #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
