@@ -23,7 +23,7 @@ function initialisePassport(passport: PassportStatic, getUserById: (id: string) 
                 username: profile.name == null ? `john_doe_${Date.now()}`: profile.name.givenName.trim().split(" ").join("_").toLowerCase()
             });
 
-            if(make_user !== false) return done(null, false, { message: "An Error Just Occured, Try Again Later" });
+            if(make_user === false) return done(null, false, { message: "An Error Just Occured, Try Again Later" });
 
             return done(null, make_user);
         }
