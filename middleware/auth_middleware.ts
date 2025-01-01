@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import jwt, { type VerifyErrors, type JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import database from '../Database/methods.ts';
 
 class Middleware {
     checkAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -7,10 +8,17 @@ class Middleware {
 
         if (!token) return res.status(403).redirect("/login");
 
-        jwt.verify(token, 'super-secret-key', (err: any, user: any) => {
+        jwt.verify(token, 'super-secret-key', async (err: any, user: any) => {
             if (err) return res.status(403).redirect("/login");
 
-            req.user = user;
+            const userIsValid = await database.isValid(user._doc.id);
+
+            if (userIsValid) req.user = user;
+            else {
+                res.clearCookie("auth_token");
+                return res.redirect("/login");
+            }
+            
             next();
         });
     }
@@ -19,8 +27,9 @@ class Middleware {
         const token = req.cookies.auth_token;
 
         if (token) {
-            jwt.verify(token, 'super-secret-key', (err: any) => {
+            jwt.verify(token, 'super-secret-key', (err: any, user: any) => {
                 if (!err) return res.status(403).redirect("/dashboard");
+                
                 next();
             });
         } else next();
