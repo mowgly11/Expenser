@@ -8,12 +8,24 @@
 
     <!-- Latest compiled JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="./common.css">
 </head>
 <body>
+    <div class="blur-overlay">
+        <div class="loader"></div>
+      </div>
     <form action="/logout" method="post">
         <button class="btn btn-danger">Logout</button>
     </form>
     <section class="container">
+        <div class="alert-popup card">
+            <div class="card-header border-0">
+                <b class="text-white alert-popup-title">Error</b>
+            </div>
+            <div class="card-body">
+                <p class="alert-popup-m card-text text-white">Alert zpekogfjoiequrjngoiuqerg</p>
+            </div>
+        </div>
         <form action="/add_expense" class="w-50" id="expenseForm">
             <div class="form-group mb-3">
                 <label for="item" class="form-label">Item</label>
@@ -44,43 +56,11 @@
                 <input type="file" class="form-control" placeholder="type the item that you spent money on.." name="pic" id="pic">
             </div>
 
-            <button class="btn btn-success form-submit">Add</button>
+            <button class="btn btn-success form-submit" type="submit">Add</button>
         </form>
     </section>
 
-    <script>
-        let expenseForm = document.getElementById("expenseForm");
-
-        expenseForm.addEventListener("submit", async(ev) => {
-            ev.preventDefault();
-
-            let item = document.getElementById("item").value;
-            let price = parseInt(document.getElementById("price").value);
-            let date = document.getElementById("date").value == '' ? null:document.getElementById("date").value;
-            let category = document.getElementById("category").value;
-            let pic = document.getElementById("pic").value == '' ? null:document.getElementById("pic").value;
-
-            console.log({item, price, date, category, pic})
-
-            let domain = new URL(window.location.href).origin;
-            const addExpense = await fetch(`${domain}/add_expense`, {
-                method: "post", 
-                headers: {
-                    'Content-Type': "application/json",
-                },
-                body: JSON.stringify({
-                    item,
-                    price,
-                    date,
-                    category,
-                    pic
-                }) 
-            });
-
-            let response = await addExpense.json();
-
-            console.log(response)
-        });
-    </script>
+    <script src="Javascript/dashboardScript.js"></script>
+    <script src="Javascript/common.js"></script>
 </body>
 </html>
