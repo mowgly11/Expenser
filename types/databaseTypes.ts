@@ -8,6 +8,7 @@ export type DataBaseOutput = {
 export type Expense = {
     item: string,
     price: number,
+    amount: number,
     date: string,
     category: string,
     picture: Buffer | null
