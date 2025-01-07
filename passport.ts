@@ -2,14 +2,13 @@
 
 import type { PassportStatic } from 'passport';
 import GoogleStrategy, { type Profile } from 'passport-google-oauth20';
-import config from './config.json';
 import database from './Database/methods.ts';
 import type { DataBaseOutput } from './types/databaseTypes.ts';
 
 function initialisePassport(passport: PassportStatic, getUserById: (id: string) => Promise<DataBaseOutput | null>) {
     passport.use(new GoogleStrategy.Strategy({
-        clientID: config.client_id,
-        clientSecret: config.client_secret,
+        clientID: process.env.client_id!,
+        clientSecret: process.env.client_secret!,
         callbackURL: 'http://localhost:3000/auth/google/callback',
         scope: ['profile', 'email'],
     }, async (_accessToken, _refreshToken, profile: Profile, done) => {

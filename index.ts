@@ -6,7 +6,6 @@ import passport from 'passport';
 import compression from 'compression';
 import bodyParser from 'body-parser';
 import methodOverride from 'method-override';
-import config from './config.json';
 import initialisePassport from "./passport.ts";
 import MongooseInit from './Database/connection.ts';
 import database from './Database/methods.ts';
@@ -14,7 +13,7 @@ import fs from 'fs';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 
-new MongooseInit(config.MONGODB_URL).connect();
+new MongooseInit(process.env.MONGODB_URL!).connect();
 
 const app: Express = express();
 
@@ -67,4 +66,4 @@ const readEndpointsDirectory = (directoryPath: string, app: any, methodMap: any)
 
 readEndpointsDirectory(endpointsPath, app, methodMap);
 
-app.listen(config.port, () => console.log("listening on port " + config.port));
+app.listen(process.env.port!, () => console.log("listening on port " + process.env.port!));
