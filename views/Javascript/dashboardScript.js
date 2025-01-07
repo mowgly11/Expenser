@@ -2,6 +2,7 @@ let expenseForm = document.getElementById("expenseForm");
 
 let itemInput = document.getElementById("item");
 let priceInput = document.getElementById("price");
+let amountInput = document.getElementById("amount");
 let dateInput = document.getElementById("date");
 let categoryInput = document.getElementById("category");
 let picInput = document.getElementById("pic");
@@ -22,13 +23,14 @@ expenseForm.addEventListener("submit", async (ev) => {
 
     let item = itemInput.value;
     let price = parseInt(priceInput.value);
+    let amount = parseInt(amountInput.value);
     let date = dateInput.value == '' ? null : dateInput.value;
     let category = categoryInput.value;
     let pic = picInput.value == '' ? null : picInput.value;
 
     console.log(date)
 
-    if(item.length > 50) return showAlertError("item is too bigger than 50 chars.");
+    if(item.length > 50 || item.length < 3) return showAlertError("item is larger than 50 chars or less than 3 chars.");
     if(datePattern.test(date) === false && date != null) return showAlertError("Invalid Date.");
     if(categories.indexOf(category) === -1) return showAlertError("invalid category, try again.");
 
@@ -41,6 +43,7 @@ expenseForm.addEventListener("submit", async (ev) => {
         body: JSON.stringify({
             item,
             price,
+            amount,
             date,
             category,
             pic
