@@ -11,14 +11,16 @@ class Middleware {
         jwt.verify(token, 'super-secret-key', async (err: any, user: any) => {
             if (err) return res.status(403).redirect("/login");
 
-            const userIsValid = await database.isValid(user._doc.id);
+            const userIsValid = await database.getUser(user._doc.id);
 
-            if (userIsValid) req.user = user;
-            else {
+            if (userIsValid != null) {
+                userIsValid.expenses = userIsValid.expenses.slice(0, 10);
+                req.user = userIsValid;
+            } else {
                 res.clearCookie("auth_token");
                 return res.redirect("/login");
             }
-            
+
             next();
         });
     }
