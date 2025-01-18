@@ -6,5 +6,5 @@ export default mongoose.model('expenser', new mongoose.Schema({
     id: String,
     username: String,
     expenses: Array,
-    monthly_report: Array
-}));
+    monthly_report: Array,
+}, { versionKey: false }));
