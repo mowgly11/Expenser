@@ -12,18 +12,47 @@ import database from './Database/methods.ts';
 import fs from 'fs';
 import path from 'path';
 import cookieParser from 'cookie-parser';
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import cors from "cors";
+import morgan from "morgan";
+
 
 new MongooseInit(process.env.MONGODB_URL!).connect();
 
 const app: Express = express();
 
+
 app.set("x-powered-by", false);
 app.set("view-engine", "ejs");
 
-app.use(express.json());
+app.use(
+    cors({
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"],
+    })
+);
+
+app.use(rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 100,
+}));
+
+app.use(helmet());
+app.use(morgan("combined"));
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "https://cdn.jsdelivr.net/"], // self and bootstrap cdn
+        },
+    })
+);
+
+app.use(express.json({ limit: "500kb" }));
 app.use(express.static(__dirname + `/views`));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser())
+app.use(cookieParser());
 app.use(compression({
     etag: false
 }));
