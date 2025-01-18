@@ -11,16 +11,6 @@ class DatabaseMethods {
         else return null;
     }
 
-    async isValid(id: string): Promise<boolean> {
-        try {
-            const user = await this.getUser(id);
-            if(user) return true;
-        } catch(err) {
-            return false;
-        }
-        return false;
-    }
-
     async makeUser(userProps: UserDescription): Promise<Document | boolean> {
         let user: Document;
         try {
@@ -77,7 +67,7 @@ class DatabaseMethods {
         return true;
     }
 
-    async addExpense(id: string, expense: Expense, existingUser: DataBaseOutput | null = null): Promise<boolean> {
+    async addExpense(id: string, expense: Expense, existingUser: DataBaseOutput | null = null): Promise<Document | boolean> {
         let user: any;
         try {
             if (existingUser) user = existingUser;
@@ -93,7 +83,7 @@ class DatabaseMethods {
             return false;
         }
         
-        return true;
+        return user;
     }
 
     async addMonthlyReport(id: string, report: Report, existingUser: DataBaseOutput | null = null): Promise<boolean> {
