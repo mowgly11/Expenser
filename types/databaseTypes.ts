@@ -11,7 +11,6 @@ export type Expense = {
     amount: number,
     date: string,
     category: string,
-    picture: Buffer | null
 }
 
 export type Report = {
