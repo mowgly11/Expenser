@@ -22,7 +22,6 @@ new MongooseInit(process.env.MONGODB_URL!).connect();
 
 const app: Express = express();
 
-
 app.set("x-powered-by", false);
 app.set("view-engine", "ejs");
 
@@ -36,6 +35,8 @@ app.use(
 app.use(rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 100,
+    message: "Too many requests, please try again later.",
+    headers: true
 }));
 
 app.use(helmet());
