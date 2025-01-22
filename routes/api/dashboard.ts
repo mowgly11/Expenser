@@ -6,7 +6,6 @@ export default {
   endpoint: "/dashboard",
   middleware: middleware.checkAuthenticated,
   Get: async function (req: Request, res: Response, next: NextFunction) {
-    let user: any = req.user;
     res.render("dashboard.ejs");
   }
 };
