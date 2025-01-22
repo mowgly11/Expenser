@@ -105,19 +105,21 @@ class DatabaseMethods {
         return true;
     }
 
-    async removeItemByIndex(id: string, index: number, type: "expense" | "report"): Promise<boolean> {
+    async removeItemById(userId: string, id: string, type: "expense" | "report"): Promise<boolean> {
         let user: any;
         try {
-            user = await this.getUser(id);
+            user = await this.getUser(userId);
 
             if (!user) throw new Error("Invalid User");
 
             switch(type){
                 case "expense":
-                    user.expenses.splice(index, 1);
+                    let foundExpense = user.expenses.findIndex((e: Report | Expense) => e.id === id);
+                    user.expenses.splice(foundExpense, 1);
                     break;
                 case "report":
-                    user.monthly_report.splice(index, 1);
+                    let foundReport = user.monthly_report.findIndex((e: Report | Expense) => e.id === id);
+                    user.monthly_report.splice(foundReport, 1);
                     break;
                 default:
                     throw new Error("Invalid type");
