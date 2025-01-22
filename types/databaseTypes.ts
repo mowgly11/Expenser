@@ -6,6 +6,7 @@ export type DataBaseOutput = {
 }
 
 export type Expense = {
+    id: string,
     item: string,
     price: number,
     amount: number,
@@ -14,6 +15,7 @@ export type Expense = {
 }
 
 export type Report = {
+    id: string,
     date: string,
     total_spent: number,
     imp_percentage: number
