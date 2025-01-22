@@ -1,9 +1,12 @@
 "use strict";
 
+import {Loading, Errors} from './interface-methods.js';
+
 let expenseForm = document.getElementById("expenseForm");
 
 let expensesTemplate = document.getElementById("expense");
 let expensesHolder = document.getElementById("expenses-container");
+let showMoreBtn = document.getElementById("show-more");
 
 let itemInput = document.getElementById("item");
 let priceInput = document.getElementById("price");
@@ -19,46 +22,28 @@ let datePattern = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 let categories = ["food", "clothing", "drinks", "bills", "transportation"];
 
 let domain = new URL(window.location.href).origin;
+let currentExpensesStart = 0;
+
+const loadingScreen = document.querySelector('.blur-overlay');
+const loader = document.querySelector('.loader');
+
+const ui = new Loading(loadingScreen, loader);
+const errors = new Errors(alertElement, alertElementTxt, alertElementTitle);
 
 document.addEventListener("DOMContentLoaded", async () => {
-    let getExpenses;
-
-    try {
-        getExpenses = await fetch(`${domain}/expenses`, {
-            method: "post",
-            headers: {
-                'Content-Type': "application/json"
-            },
-            body: JSON.stringify({
-                start: 0,
-                amount: 10
-            })
-        });
-    } catch (e) {
-        showAlertError("failed to get expenses, please try reloading your page.");
-    }
+    let getExpenses = await requestExpensesList(currentExpensesStart, 10);
+    if (getExpenses == null) errors.showAlertError("failed to get expenses, please try reloading your page");
 
     getExpenses = await getExpenses.json();
 
-    if (getExpenses == null) showAlertError("failed to get expenses, lpease try reloading your page");
-
     let getExpensesArray = getExpenses.message;
 
-    getExpensesArray.forEach(expense => {
-        let { item, price, amount, category, date } = expense;
-        const expenseClone = expensesTemplate.content.cloneNode(true);
+    getExpensesArray.forEach(expense => addExpenseCard(expense));
 
-        expenseClone.querySelector("#show-item").textContent = item;
-        expenseClone.querySelector("#show-price").textContent = price;
-        expenseClone.querySelector("#show-amount").textContent = amount;
-        expenseClone.querySelector("#show-category").textContent = category;
-        expenseClone.querySelector("#show-date").textContent = date;
-
-        expensesHolder.append(expenseClone);
-    });
+    showMoreBtn.addEventListener("click", () => { });
 
     expenseForm.addEventListener("submit", async (ev) => {
-        showLoadingScreen();
+        ui.showLoadingScreen();
         ev.preventDefault();
 
         let item = itemInput.value;
@@ -67,9 +52,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         let date = dateInput.value == '' ? null : dateInput.value;
         let category = categoryInput.value;
 
-        if (item.length > 50 || item.length < 3) return showAlertError("item is larger than 50 chars or less than 3 chars.");
-        if (datePattern.test(date) === false && date != null) return showAlertError("Invalid Date.");
-        if (categories.indexOf(category) === -1) return showAlertError("invalid category, try again.");
+        if (item.length > 50 || item.length < 3) return errors.showAlertError("item is larger than 50 chars or less than 3 chars.");
+        if (datePattern.test(date) === false && date != null) return errors.showAlertError("Invalid Date.");
+        if (categories.indexOf(category) === -1) return errors.showAlertError("invalid category, try again.");
 
         const addExpense = await fetch(`${domain}/add_expense`, {
             method: "post",
@@ -85,50 +70,83 @@ document.addEventListener("DOMContentLoaded", async () => {
             })
         });
 
-        if (addExpense.redirected) return showAlertError("an error just occured, Please reload your page.");
+        if (addExpense.redirected) return errors.showAlertError("an error just occured, Please reload your page.");
 
         let response = await addExpense.json();
-        hideLoadingScreen();
+        ui.hideLoadingScreen();
 
         if (response.status == 'ok') {
-            showAlertSuccess(response.message)
+            errors.showAlertSuccess(response.message);
+            addExpenseCard({ item, price, amount, date, category })
         } else {
-            showAlertError(response.message)
+            errors.showAlertError(response.message)
         }
     });
 });
 
-// adding expenses
+function addExpenseCard(details) {
+    let { id, item, price, amount, category, date } = details;
+    const expenseClone = expensesTemplate.content.cloneNode(true);
 
-let cooldown = false;
-function showAlertSuccess(text = "Successfully executed!", bg = 'bg-success', title = 'Success!') {
-    hideLoadingScreen();
-    if (cooldown) return;
-    alertElementTitle.textContent = title;
-    alertElementTxt.innerHTML = text;
-    alertElement.classList.add("visible-alert");
-    alertElement.classList.add(bg);
-    cooldown = true;
-    setTimeout(() => {
-        alertElement.classList.remove("visible-alert");
-        alertElement.classList.remove(bg);
-        cooldown = false;
-    }, 2000);
+    expenseClone.querySelector("#show-item").textContent = item;
+    expenseClone.querySelector("#show-price").textContent = price;
+    expenseClone.querySelector("#show-amount").textContent = amount;
+    expenseClone.querySelector("#show-category").textContent = category;
+    expenseClone.querySelector("#show-date").textContent = date;
+    expenseClone.querySelector("button[data-expense-id]").value = id ?? "none";
+
+    setupDeleter(expenseClone.querySelector("button[data-expense-id]"));
+
+    expensesHolder.append(expenseClone);
 }
 
-function showAlertError(text = "An Error Just Occured.", bg = 'bg-danger', title = 'Error!') {
-    showAlertSuccess(text, bg, title);
+function setupDeleter(btn) {
+    btn.addEventListener("click", async() => {
+        try {
+            let deleteResponse = await fetch(`${domain}/delete_expense`, {
+                method: "post",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: btn.value
+                })
+            });
+
+            deleteResponse = await deleteResponse.json();
+
+            if(deleteResponse.status === "ok") {
+                btn.parentElement.remove();
+                errors.showAlertSuccess(deleteResponse.message);
+            } else {
+                errors.showAlertError(deleteResponse.message)
+            }
+        } catch(e) {
+            console.log(e);
+            errors.showAlertError("Couldn't delete expense, try again.");
+        }
+        
+    });
 }
 
-const loadingScreen = document.querySelector('.blur-overlay');
-const loader = document.querySelector('.loader');
+async function requestExpensesList(start, amount) {
+    let getExpenses;
+    try {
+        getExpenses = await fetch(`${domain}/expenses`, {
+            method: "post",
+            headers: {
+                'Content-Type': "application/json"
+            },
+            body: JSON.stringify({
+                start,
+                amount
+            })
+        });
 
-function showLoadingScreen() {
-    loadingScreen.style.display = 'flex';
-    loader.style.display = 'block';
-}
+        return getExpenses;
+    } catch (e) {
+        console.log(e)
+        return null;
+    }
 
-function hideLoadingScreen() {
-    loadingScreen.style.display = 'none';
-    loader.style.display = 'none';
 }
