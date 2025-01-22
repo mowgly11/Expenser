@@ -3,6 +3,7 @@ import middleware from '../../middleware/auth_middleware.ts';
 import database from "../../Database/methods.ts";
 import type { Expense } from '../../types/databaseTypes.ts';
 import sanitize from 'sanitize-html';
+import { v4 as uuidv4 } from 'uuid';
 
 const sanitizeItem = (item: string) => sanitize(item, {
   allowedTags: [], // Allow no HTML tags
@@ -32,6 +33,7 @@ export default {
     let added = await database.addExpense(
       user._doc.id,
       {
+        id: uuidv4(),
         item,
         price,
         amount,
