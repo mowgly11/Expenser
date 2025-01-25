@@ -115,14 +115,16 @@ class DatabaseMethods {
             switch(type){
                 case "expense":
                     let foundExpense = user.expenses.findIndex((e: Report | Expense) => e.id === id);
+                    if(!foundExpense) return false;
                     user.expenses.splice(foundExpense, 1);
                     break;
                 case "report":
                     let foundReport = user.monthly_report.findIndex((e: Report | Expense) => e.id === id);
+                    if(!foundReport) return false;
                     user.monthly_report.splice(foundReport, 1);
                     break;
                 default:
-                    throw new Error("Invalid type");
+                    return false;
             }
 
             await user.save();
