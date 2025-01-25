@@ -1,6 +1,6 @@
 "use strict";
 
-import {Loading, Errors} from './interface-methods.js';
+import { Loading, Errors } from './interface-methods.js';
 
 let expenseForm = document.getElementById("expenseForm");
 
@@ -32,6 +32,7 @@ const errors = new Errors(alertElement, alertElementTxt, alertElementTitle);
 
 document.addEventListener("DOMContentLoaded", async () => {
     let getExpenses = await requestExpensesList(currentExpensesStart, 10);
+    currentExpensesStart += 10;
     if (getExpenses == null) errors.showAlertError("failed to get expenses, please try reloading your page");
 
     getExpenses = await getExpenses.json();
@@ -40,7 +41,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     getExpensesArray.forEach(expense => addExpenseCard(expense));
 
-    showMoreBtn.addEventListener("click", () => { });
+    showMoreBtn.addEventListener("click", async () => {
+        ui.showLoadingScreen();
+
+        let moreExpenses;
+
+        try {
+            moreExpenses = await requestExpensesList(currentExpensesStart, 10);
+            currentExpensesStart += 10;
+
+            moreExpenses = await moreExpenses.json();
+        } catch (err) {
+            console.error(err);
+            errors.showAlertError("failed to get more expenses, please try reloading your page.");
+        }
+
+        moreExpenses.message.forEach(expense => addExpenseCard(expense));
+
+        ui.hideLoadingScreen();
+    });
 
     expenseForm.addEventListener("submit", async (ev) => {
         ui.showLoadingScreen();
@@ -56,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (datePattern.test(date) === false && date != null) return errors.showAlertError("Invalid Date.");
         if (categories.indexOf(category) === -1) return errors.showAlertError("invalid category, try again.");
 
-        const addExpense = await fetch(`${domain}/add_expense`, {
+        const addExpense = await fetch(`${domain}/api/add_expense`, {
             method: "post",
             headers: {
                 'Content-Type': "application/json",
@@ -74,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         let response = await addExpense.json();
         ui.hideLoadingScreen();
-
+        console.log(date);
         if (response.status == 'ok') {
             errors.showAlertSuccess(response.message);
             addExpenseCard({ item, price, amount, date, category })
@@ -92,7 +111,7 @@ function addExpenseCard(details) {
     expenseClone.querySelector("#show-price").textContent = price;
     expenseClone.querySelector("#show-amount").textContent = amount;
     expenseClone.querySelector("#show-category").textContent = category;
-    expenseClone.querySelector("#show-date").textContent = date;
+    expenseClone.querySelector("#show-date").textContent = date ?? getNewDate();
     expenseClone.querySelector("button[data-expense-id]").value = id ?? "none";
 
     setupDeleter(expenseClone.querySelector("button[data-expense-id]"));
@@ -101,9 +120,9 @@ function addExpenseCard(details) {
 }
 
 function setupDeleter(btn) {
-    btn.addEventListener("click", async() => {
+    btn.addEventListener("click", async () => {
         try {
-            let deleteResponse = await fetch(`${domain}/delete_expense`, {
+            let deleteResponse = await fetch(`${domain}/api/delete_expense`, {
                 method: "post",
                 headers: {
                     'Content-Type': 'application/json'
@@ -115,24 +134,23 @@ function setupDeleter(btn) {
 
             deleteResponse = await deleteResponse.json();
 
-            if(deleteResponse.status === "ok") {
+            if (deleteResponse.status === "ok") {
                 btn.parentElement.remove();
                 errors.showAlertSuccess(deleteResponse.message);
             } else {
                 errors.showAlertError(deleteResponse.message)
             }
-        } catch(e) {
+        } catch (e) {
             console.log(e);
             errors.showAlertError("Couldn't delete expense, try again.");
         }
-        
     });
 }
 
 async function requestExpensesList(start, amount) {
     let getExpenses;
     try {
-        getExpenses = await fetch(`${domain}/expenses`, {
+        getExpenses = await fetch(`${domain}/api/expenses`, {
             method: "post",
             headers: {
                 'Content-Type': "application/json"
@@ -148,5 +166,14 @@ async function requestExpensesList(start, amount) {
         console.log(e)
         return null;
     }
+}
 
+function getNewDate() {
+    const date = new Date();
+
+    let day = date.getDate();
+    let month = date.getMonth() + 1;
+    let year = date.getFullYear();
+
+    return `${year}-${month < 10 ? `0${month}` : month}-${day < 10 ? `0${day}` : day}`;
 }
