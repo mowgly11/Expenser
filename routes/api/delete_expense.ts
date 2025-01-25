@@ -5,18 +5,18 @@ import type { Expense } from '../../types/databaseTypes.ts';
 
 export default {
   methods: ["post"],
-  endpoint: "/delete_expense",
+  endpoint: "/api/delete_expense",
   middleware: middleware.checkAuthenticated,
   Post: async function (req: Request, res: Response, next: NextFunction) {
     let user: any = req.user;
-    const { id } = req.body;
+    const id: string = req.body.id;
 
-    // add some checks later, i'm so fucking tired
+    if (typeof id !== "string") return res.json({ status: 'failed', message: "invalid ID" });
 
     let removeExpense: boolean = await database.removeItemById(user._doc.id, id, "expense");
 
     if (!removeExpense) return res.json({ status: 'failed', message: "there was an error, try again." });
 
-    return res.json({ status: 'ok', message: "successfully added!" });
+    return res.json({ status: 'ok', message: "successfully removed!" });
   }
 };
