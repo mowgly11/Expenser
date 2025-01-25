@@ -14,7 +14,7 @@ const categories = ["food", "clothing", "drinks", "bills", "transportation"];
 
 export default {
   methods: ["post"],
-  endpoint: "/add_expense",
+  endpoint: "/api/add_expense",
   middleware: middleware.checkAuthenticated,
   Post: async function (req: Request, res: Response, next: NextFunction) {
     let user: any = req.user;
@@ -25,8 +25,8 @@ export default {
     const sanitizedItem = sanitizeItem(item);
 
     if (typeof sanitizedItem !== 'string' || sanitizedItem.length > 50 || sanitizedItem.length < 3) return res.json({ status: 'failed', message: "item is larger than 50 chars or less than 3 chars." });
-    if (typeof price !== 'number' || isNaN(price) || price < 0 || price > 9999999999) return res.json({ status: 'failed', message: "price must be a positive number." });
-    if (typeof amount !== 'number' || isNaN(amount) || !Number.isInteger(amount) || amount < 0 || amount > 9999999999) return res.json({ status: 'failed', message: "amount must be a positive number." });
+    if (isNaN(price) || price < 0 || price > 9999999999) return res.json({ status: 'failed', message: "price must be a positive number." });
+    if (isNaN(amount) || !Number.isInteger(amount) || amount < 0 || amount > 9999999999) return res.json({ status: 'failed', message: "amount must be a positive number." });
     if (datePattern.test(date) === false && date != null) return res.json({ status: 'failed', message: "Invalid date. Format should be yyyy-mm-dd" });
     if (categories.indexOf(category) === -1) return res.json({ status: 'failed', message: "Invalid category" });
 
@@ -34,10 +34,10 @@ export default {
       user._doc.id,
       {
         id: uuidv4(),
-        item,
+        item: item.trim(),
         price,
         amount,
-        date: date ?? getNewDate(),
+        date: date.trim() ?? getNewDate().trim(),
         category
       });
 
@@ -47,12 +47,12 @@ export default {
   }
 };
 
-function getNewDate() {
+function getNewDate(): string {
   const date = new Date();
 
   let day = date.getDate();
   let month = date.getMonth() + 1;
   let year = date.getFullYear();
 
-  return `${day}-${month}-${year}`;
+  return `${year}-${month < 10 ? `0${month}` : month}-${day}`;
 }
