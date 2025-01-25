@@ -4,7 +4,7 @@ import database from '../../Database/methods.ts';
 
 export default {
   methods: ["post"],
-  endpoint: "/expenses",
+  endpoint: "/api/expenses",
   middleware: middleware.checkAuthenticated,
   Post: async function (req: Request, res: Response, next: NextFunction) {
     const amount: number = parseInt(req.body.amount);
