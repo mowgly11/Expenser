@@ -72,16 +72,15 @@ const methodMap = new Map([
 
 const endpointsPath = path.join(__dirname, "routes");
 
-const readEndpointsDirectory = (directoryPath: string, app: any, methodMap: any) => {
+const readEndpointsDirectory = async (directoryPath: string, app: any, methodMap: any) => {
     const files = fs.readdirSync(directoryPath);
 
-    files.forEach(async (file) => {
+    await Promise.all(files.map(async (file) => {
         const filePath = path.join(directoryPath, file);
         const stat = fs.statSync(filePath);
 
-        if (stat.isDirectory()) readEndpointsDirectory(filePath, app, methodMap);
-
-        else if (stat.isFile() && file.endsWith(".ts")) {
+        if (stat.isDirectory()) return readEndpointsDirectory(filePath, app, methodMap);
+        if (stat.isFile() && file.endsWith(".ts")) {
             const module = await import(`file://${filePath}`);
             const { endpoint, methods, middleware } = module.default;
 
@@ -89,11 +88,24 @@ const readEndpointsDirectory = (directoryPath: string, app: any, methodMap: any)
                 const { callback, method: httpMethod } = methodMap.get(method);
                 if (typeof middleware === 'function') app[httpMethod](endpoint, middleware, module.default[callback]);
                 else app[httpMethod](endpoint, module.default[callback]);
+                //console.log("Loaded " + endpoint)
             });
+
         }
-    });
+    }));
+
+    setTimeout(() => {
+        app.all("*", (req: Request, res: Response) => {
+            res.sendStatus(404);
+        });
+    }, 2000);
 };
 
-readEndpointsDirectory(endpointsPath, app, methodMap);
+readEndpointsDirectory(endpointsPath, app, methodMap).then(() => {
+    app.listen(process.env.port!, () => console.log("listening on port " + process.env.port!));
+});
 
-app.listen(process.env.port!, () => console.log("listening on port " + process.env.port!));
+setInterval(() => {
+    const mem = process.memoryUsage().heapUsed / 1024 / 1024;
+    console.log(`The app is using approximately ${mem.toFixed(2)} MB of memory`);
+}, 3000);
