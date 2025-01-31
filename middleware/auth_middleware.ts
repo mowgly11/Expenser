@@ -8,7 +8,7 @@ class Middleware {
 
         if (!token) return res.status(403).redirect("/login");
 
-        jwt.verify(token, 'super-secret-key', async (err: any, user: any) => {
+        jwt.verify(token, process.env.JWT_SECRET!, async (err: any, user: any) => {
             if (err) return res.status(403).redirect("/login");
 
             const userIsValid = await database.getUser(user._doc.id);
@@ -29,7 +29,7 @@ class Middleware {
         const token = req.cookies.auth_token;
 
         if (token) {
-            jwt.verify(token, 'super-secret-key', (err: any, user: any) => {
+            jwt.verify(token, process.env.JWT_SECRET!, (err: any, user: any) => {
                 if (!err) return res.status(403).redirect("/dashboard");
                 
                 next();
