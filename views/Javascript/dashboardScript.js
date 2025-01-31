@@ -30,6 +30,12 @@ const loader = document.querySelector('.loader');
 const ui = new Loading(loadingScreen, loader);
 const errors = new Errors(alertElement, alertElementTxt, alertElementTitle);
 
+let globalCooldown = 0;
+
+let isOnShowMoreCooldown = false;
+let isOnAddExpenseCooldown = false;
+let isOnDeleteCooldown = false;
+
 document.addEventListener("DOMContentLoaded", async () => {
     let getExpenses = await requestExpensesList(currentExpensesStart, 10);
     currentExpensesStart += 10;
@@ -41,7 +47,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     getExpensesArray.forEach(expense => addExpenseCard(expense));
 
+
     showMoreBtn.addEventListener("click", async () => {
+        if(isOnShowMoreCooldown) return errors.showAlertError("slow it down.");
+        if(expensesHolder.children.length < 11) return;
+
         ui.showLoadingScreen();
 
         let moreExpenses;
@@ -59,11 +69,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         moreExpenses.message.forEach(expense => addExpenseCard(expense));
 
         ui.hideLoadingScreen();
+
+        isOnShowMoreCooldown = true;
+        setTimeout(() => isOnShowMoreCooldown = false, globalCooldown);
     });
 
+
     expenseForm.addEventListener("submit", async (ev) => {
-        ui.showLoadingScreen();
         ev.preventDefault();
+        if(isOnAddExpenseCooldown) return errors.showAlertError("slow it down.");
+        ui.showLoadingScreen();
 
         let item = itemInput.value;
         let price = parseInt(priceInput.value);
@@ -71,6 +86,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         let date = dateInput.value == '' ? null : dateInput.value;
         let category = categoryInput.value;
 
+        ui.hideLoadingScreen();
         if (item.length > 50 || item.length < 3) return errors.showAlertError("item is larger than 50 chars or less than 3 chars.");
         if (datePattern.test(date) === false && date != null) return errors.showAlertError("Invalid Date.");
         if (categories.indexOf(category) === -1) return errors.showAlertError("invalid category, try again.");
@@ -92,14 +108,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (addExpense.redirected) return errors.showAlertError("an error just occured, Please reload your page.");
 
         let response = await addExpense.json();
-        ui.hideLoadingScreen();
-        console.log(date);
+        
         if (response.status == 'ok') {
             errors.showAlertSuccess(response.message);
-            addExpenseCard({ item, price, amount, date, category })
-        } else {
-            errors.showAlertError(response.message)
-        }
+            addExpenseCard(response.data)
+        } else errors.showAlertError(response.message);
+
+        isOnAddExpenseCooldown = true;
+        setTimeout(() => isOnAddExpenseCooldown = false, globalCooldown);
     });
 });
 
@@ -121,6 +137,9 @@ function addExpenseCard(details) {
 
 function setupDeleter(btn) {
     btn.addEventListener("click", async () => {
+        if(isOnDeleteCooldown) return errors.showAlertError("slow it down.");
+
+        btn.parentElement.remove();
         try {
             let deleteResponse = await fetch(`${domain}/api/delete_expense`, {
                 method: "post",
@@ -135,15 +154,17 @@ function setupDeleter(btn) {
             deleteResponse = await deleteResponse.json();
 
             if (deleteResponse.status === "ok") {
-                btn.parentElement.remove();
                 errors.showAlertSuccess(deleteResponse.message);
             } else {
-                errors.showAlertError(deleteResponse.message)
+                errors.showAlertError(deleteResponse.message);
             }
         } catch (e) {
             console.log(e);
             errors.showAlertError("Couldn't delete expense, try again.");
         }
+
+        isOnDeleteCooldown = true;
+        setTimeout(() => isOnDeleteCooldown = false, globalCooldown);
     });
 }
 
