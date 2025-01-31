@@ -10,7 +10,7 @@ export default {
     let user: Express.User | undefined = req.user;
     let token;
     if(user) {
-       token = jwt.sign({...user}, "super-secret-key", { expiresIn: '2 days' });
+       token = jwt.sign({...user}, process.env.JWT_SECRET!, { expiresIn: '2 days' });
 
        res.cookie('auth_token', token, {
         httpOnly: true,
