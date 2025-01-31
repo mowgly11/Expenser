@@ -115,12 +115,12 @@ class DatabaseMethods {
             switch(type){
                 case "expense":
                     let foundExpense = user.expenses.findIndex((e: Report | Expense) => e.id === id);
-                    if(!foundExpense) return false;
+                    if(foundExpense === -1) return false;
                     user.expenses.splice(foundExpense, 1);
                     break;
                 case "report":
                     let foundReport = user.monthly_report.findIndex((e: Report | Expense) => e.id === id);
-                    if(!foundReport) return false;
+                    if(foundReport === -1) return false;
                     user.monthly_report.splice(foundReport, 1);
                     break;
                 default:
@@ -129,7 +129,7 @@ class DatabaseMethods {
 
             await user.save();
         } catch (e) {
-            //console.log(e);
+            console.log(e);
             return false;
         }
 
